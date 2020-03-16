@@ -6,6 +6,8 @@ using libsharp2_jll
 export AlmInfo, make_alm_info, alm_index, alm_count
 export make_triangular_alm_info
 
+export GeomInfo, make_weighted_healpix_geom_info
+
 mutable struct AlmInfo
     ptr::Ptr{Cvoid}
 
@@ -98,7 +100,38 @@ function destroy_geom_info(info::GeomInfo)
     end
 end
 
-# ADD THIS FOR HEALPIX
-# sharp_make_weighted_healpix_geom_info(cs->n_eq,1,NULL,&geom_info);
+function make_weighted_healpix_geom_info(
+        nside::Integer, stride::Integer, weight::AbstractArray{T}
+    ) where T
+
+    geom_info_ptr = Ref{Ptr{Cvoid}}()
+
+    # check for right number of ring weights
+    nrings = 4 * nside - 1
+    @assert length(weight) == nrings
+
+    weight_cdouble = [Cdouble(x) for x in weight]  
+    ccall(
+        (:sharp_make_weighted_healpix_geom_info, libsharp2),
+        Cvoid,
+        (Cint, Cint, Ref{Cdouble}, Ref{Ptr{Cvoid}}),
+        nside, stride, weight_cdouble, geom_info_ptr,
+    )
+    GeomInfo(geom_info_ptr[])
+end
+
+function make_weighted_healpix_geom_info(nside::Integer, stride::Integer)
+    geom_info_ptr = Ref{Ptr{Cvoid}}()
+    ccall(
+        (:sharp_make_weighted_healpix_geom_info, libsharp2),
+        Cvoid,
+        (Cint, Cint, Ref{Cdouble}, Ref{Ptr{Cvoid}}),
+        nside, stride, Ptr{Cdouble}(C_NULL), geom_info_ptr,
+    )
+    # passes NULL for ring weights
+
+    GeomInfo(geom_info_ptr[])
+end
+    
 
 end # module
