@@ -6,7 +6,7 @@ using libsharp2_jll
 export AlmInfo, make_alm_info, alm_index, alm_count
 export make_triangular_alm_info
 
-export GeomInfo, make_weighted_healpix_geom_info
+export GeomInfo, make_weighted_healpix_geom_info, map_size
 
 mutable struct AlmInfo
     ptr::Ptr{Cvoid}
@@ -132,6 +132,66 @@ function make_weighted_healpix_geom_info(nside::Integer, stride::Integer)
 
     GeomInfo(geom_info_ptr[])
 end
-    
+
+"""
+Counts the number of grid points needed for (the local part of) a 
+map described by geometry info.
+"""
+map_size(geom_info::GeomInfo) = ccall(
+    (:sharp_map_size, libsharp2),
+    Cptrdiff_t,
+    (Ptr{Cvoid},),
+    geom_info.ptr
+)
+
+
+"""
+SHARP job types.
+"""
+const SHARP_YtW = Cint(0)               # analysis
+const SHARP_MAP2ALM = SHARP_YtW         # analysis
+const SHARP_Y = Cint(1)                 # synthesis
+const SHARP_ALM2MAP = Cint(SHARP_Y)     # synthesis
+const SHARP_Yt = Cint(2)                # adjoint synthesis
+const SHARP_WY = Cint(3)                # adjoint analysis
+const SHARP_ALM2MAP_DERIV1 = Cint(4)    # synthesis of first derivatives
+
+"""
+SHARP job flags.
+"""
+# map and a_lm are in double precision
+const SHARP_DP = Cint(1<<4)     
+# results are added to the output arrays, instead of overwriting them
+const SHARP_ADD = Cint(1<<5)    
+const SHARP_NO_FFT = Cint(1<<7)
+
+
+
+"""
+Performs a libsharp2 SHT job.
+
+This sets `double *time`, `unsigned long long *opcnt` to C_NULL.
+"""
+function sharp_execute(jobtype::Integer, spin::Integer, 
+                       alm, map, 
+                       geom_info::GeomInfo, alm_info::AlmInfo, flags::Integer)
+
+    ccall(
+        (:sharp_execute, libsharp2),
+        Cvoid,
+        (
+            Cint, Cint, Ptr{Ptr{ComplexF64}}, Ptr{Ptr{Cdouble}}, 
+            Ref{Ptr{Cvoid}}, Ref{Ptr{Cvoid}}, Cint,
+            Ref{Ptr{Cdouble}}, Ref{Ptr{Culonglong}}
+        ),
+        jobtype, spin, alm, map,
+        geom_info.ptr, alm_info.ptr, flags,
+        Ptr{Cdouble}(C_NULL), Ptr{Culonglong}(C_NULL)
+    )
+
+    return alm
+end
+
+
 
 end # module
