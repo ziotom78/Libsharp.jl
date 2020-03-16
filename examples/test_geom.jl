@@ -16,8 +16,8 @@ alm_info = make_triangular_alm_info(lmax, lmax, 1)
 map_size(geom_info)
 
 ##
-maps = Array{Float64,1}[rand((npix))]
-alms = Array{ComplexF64,1}[zeros(ComplexF64, (n_alm))]
+maps = Array{Cdouble,1}[rand(Cdouble, (npix))]
+alms = Array{ComplexF64}[zeros(ComplexF64, (n_alm))]
 
 ##
 LibSharp.sharp_execute(

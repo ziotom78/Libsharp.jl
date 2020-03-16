@@ -173,7 +173,7 @@ Performs a libsharp2 SHT job.
 This sets `double *time`, `unsigned long long *opcnt` to C_NULL.
 """
 function sharp_execute(jobtype::Integer, spin::Integer, 
-                       alm, map, 
+                       alms, maps, 
                        geom_info::GeomInfo, alm_info::AlmInfo, flags::Integer)
 
     ccall(
@@ -184,12 +184,10 @@ function sharp_execute(jobtype::Integer, spin::Integer,
             Ref{Ptr{Cvoid}}, Ref{Ptr{Cvoid}}, Cint,
             Ref{Ptr{Cdouble}}, Ref{Ptr{Culonglong}}
         ),
-        jobtype, spin, alm, map,
+        jobtype, spin, alms, maps,
         geom_info.ptr, alm_info.ptr, flags,
         Ptr{Cdouble}(C_NULL), Ptr{Culonglong}(C_NULL)
     )
-
-    return alm
 end
 
 
