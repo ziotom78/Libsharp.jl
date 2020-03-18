@@ -1,32 +1,36 @@
 ##
-# using Libdl
-# using libsharp2_jll
+using Libdl
+using libsharp2_jll
 using LibSharp
 using Healpix
+
 ##
 
 nside = 4
-lmax = 2
-npix = 12*nside*nside
-n_alm = Int64( ((lmax+1)*(lmax+2))/2 )
-geom_info = make_weighted_healpix_geom_info(nside, 1)
+lmax = 4
+geom_info = make_weighted_healpix_geom_info(
+    nside, 1)
 alm_info = make_triangular_alm_info(lmax, lmax, 1)
 
-##
-# maps = Array{Cdouble,1}[rand(Cdouble, (npix))]
-# alms = Array{ComplexF64,1}[zeros(ComplexF64, (n_alm))]
+npix = map_size(geom_info)
+nalms = alm_count(alm_info)
 
-map0 = ones(Cdouble, (npix))
-refMap = [Ref(map0, 1)]
-alm0 = zeros(ComplexF64, (n_alm))
-refAlm = [Ref(alm0, 1)]
 ##
-LibSharp.sharp_execute(
-    LibSharp.SHARP_MAP2ALM, 0, 
-    refAlm, 
-    refMap, 
-    geom_info, alm_info, 
-    LibSharp.SHARP_DP)
-##
-println(alm0)
+alms = ones(ComplexF64, (nalms))
+maps = 2.0  .* ones((npix))
+
+GC.@preserve alms maps ccall(
+    (:sharp_execute, libsharp2),
+    Cvoid,
+    (
+        Cint, Cint, Ptr{Cvoid}, Ptr{Cvoid}, 
+        Ptr{Cvoid}, Ptr{Cvoid}, Cint,
+        Ref{Cdouble}, Ref{Culonglong}
+    ),
+    0, 0, [pointer(alms)], [pointer(maps)],
+    geom_info.ptr, alm_info.ptr, LibSharp.SHARP_DP,
+    Ptr{Cdouble}(C_NULL), Ptr{Culonglong}(C_NULL)
+)
+
+println(alms)
 ##

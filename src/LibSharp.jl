@@ -176,7 +176,7 @@ function sharp_execute(jobtype::Integer, spin::Integer,
                        alms, maps, 
                        geom_info::GeomInfo, alm_info::AlmInfo, flags::Integer)
 
-    ccall(
+    GC.@preserve alms maps ccall(
         (:sharp_execute, libsharp2),
         Cvoid,
         (
@@ -184,7 +184,7 @@ function sharp_execute(jobtype::Integer, spin::Integer,
             Ref{Ptr{Cvoid}}, Ref{Ptr{Cvoid}}, Cint,
             Ref{Ptr{Cdouble}}, Ref{Ptr{Culonglong}}
         ),
-        jobtype, spin, alms, maps,
+        jobtype, spin, [pointer(alms)], [pointer(maps)],
         geom_info.ptr, alm_info.ptr, flags,
         Ptr{Cdouble}(C_NULL), Ptr{Culonglong}(C_NULL)
     )
