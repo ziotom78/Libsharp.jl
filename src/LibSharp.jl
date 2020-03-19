@@ -7,6 +7,7 @@ export AlmInfo, make_alm_info, alm_index, alm_count
 export make_triangular_alm_info
 
 export GeomInfo, make_weighted_healpix_geom_info, map_size
+export sharp_execute!
 
 mutable struct AlmInfo
     ptr::Ptr{Cvoid}
@@ -172,19 +173,23 @@ Performs a libsharp2 SHT job.
 
 This sets `double *time`, `unsigned long long *opcnt` to C_NULL.
 """
-function sharp_execute(jobtype::Integer, spin::Integer, 
-                       alms, maps, 
-                       geom_info::GeomInfo, alm_info::AlmInfo, flags::Integer)
+function sharp_execute!(jobtype::Integer, spin::Integer, 
+                        alms::Array{Array{Complex{T},1},1}, 
+                        maps::Array{Array{T,1},1}, 
+                        geom_info::GeomInfo, alm_info::AlmInfo, 
+                        flags::Integer) where T <: AbstractFloat
 
     GC.@preserve alms maps ccall(
         (:sharp_execute, libsharp2),
         Cvoid,
         (
-            Cint, Cint, Ptr{Ptr{ComplexF64}}, Ptr{Ptr{Cdouble}}, 
-            Ref{Ptr{Cvoid}}, Ref{Ptr{Cvoid}}, Cint,
-            Ref{Ptr{Cdouble}}, Ref{Ptr{Culonglong}}
+            Cint, Cint, Ptr{Cvoid}, Ptr{Cvoid}, 
+            Ptr{Cvoid}, Ptr{Cvoid}, Cint,
+            Ref{Cdouble}, Ref{Culonglong}
         ),
-        jobtype, spin, [pointer(alms)], [pointer(maps)],
+        jobtype, spin, 
+        [pointer(alm) for alm in alms], 
+        [pointer(map) for map in maps],
         geom_info.ptr, alm_info.ptr, flags,
         Ptr{Cdouble}(C_NULL), Ptr{Culonglong}(C_NULL)
     )
