@@ -9,12 +9,35 @@ export make_triangular_alm_info
 export GeomInfo, make_weighted_healpix_geom_info, map_size
 export sharp_execute!
 
+export SHARP_YtW, SHARP_MAP2ALM, SHARP_Y, SHARP_ALM2MAP
+export SHARP_Yt, SHARP_WY, SHARP_ALM2MAP_DERIV1
+export SHARP_DP, SHARP_ADD, SHARP_NO_FFT
+
+
+"""
+    AlmInfo
+
+Stores a C pointer to alm format information.
+
+# Fields
+- `ptr::Ptr{Cvoid}`: pointer to the C structure
+"""
 mutable struct AlmInfo
     ptr::Ptr{Cvoid}
 
     AlmInfo(ptr::Ptr{Cvoid}) = finalizer(destroy_alm_info, new(ptr))
 end
 
+
+"""
+    make_alm_info(lmax::Integer, mmax::Integer, stride::Integer, 
+        mstart::AbstractArray{T}) where T <: Integer
+
+Initialises a general a_lm data structure.
+ 
+# Returns
+- AlmInfo object
+"""
 function make_alm_info(lmax::Integer, mmax::Integer, stride::Integer, 
                        mstart::AbstractArray{T}) where T <: Integer
     alm_info_ptr = Ref{Ptr{Cvoid}}()
@@ -29,12 +52,15 @@ function make_alm_info(lmax::Integer, mmax::Integer, stride::Integer,
     AlmInfo(alm_info_ptr[])
 end
 
+
 """
+    make_triangular_alm_info(lmax::Integer, mmax::Integer, stride::Integer)
+
 Initialises an a_lm data structure according to the scheme 
 used by Healpix_cxx.
  
-### Returns
- AlmInfo object
+# Returns
+- `AlmInfo` object
 """
 function make_triangular_alm_info(lmax::Integer, mmax::Integer, 
                                   stride::Integer)
@@ -50,6 +76,11 @@ function make_triangular_alm_info(lmax::Integer, mmax::Integer,
     AlmInfo(alm_info_ptr[])
 end
 
+"""
+    destroy_alm_info(info::AlmInfo)
+
+Deallocate the C object corresponding to a libsharp alm info.
+"""
 function destroy_alm_info(info::AlmInfo)
     ptr = info.ptr
 
@@ -64,6 +95,11 @@ function destroy_alm_info(info::AlmInfo)
     end
 end
 
+"""
+    alm_index(alm::AlmInfo, l::Integer, mi::Integer)
+
+Compute the 0-based index of the l,m harmonic.
+"""
 function alm_index(alm::AlmInfo, l::Integer, mi::Integer)
     ccall(
         (:sharp_alm_index, libsharp2),
@@ -73,6 +109,11 @@ function alm_index(alm::AlmInfo, l::Integer, mi::Integer)
     )
 end
 
+"""
+    alm_count(alm::AlmInfo)
+
+Compute the total number of spherical harmonic coefficients in the AlmInfo.
+"""
 alm_count(alm::AlmInfo) = ccall(
     (:sharp_alm_count, libsharp2),
     Cptrdiff_t,
@@ -80,13 +121,25 @@ alm_count(alm::AlmInfo) = ccall(
     alm.ptr,
 )
 
+"""
+    GeomInfo
 
+Stores a C pointer to geometry information like ring sizes.
+
+# Fields
+- `ptr::Ptr{Cvoid}`: pointer to the C structure
+"""
 mutable struct GeomInfo
     ptr::Ptr{Cvoid}
 
     GeomInfo(ptr::Ptr{Cvoid}) = finalizer(destroy_geom_info, new(ptr))
 end
 
+"""
+    destroy_geom_info(info::GeomInfo)
+
+Deallocate the C object corresponding to a libsharp geometry info.
+"""
 function destroy_geom_info(info::GeomInfo)
     ptr = info.ptr
 
@@ -101,9 +154,25 @@ function destroy_geom_info(info::GeomInfo)
     end
 end
 
+"""
+    make_weighted_healpix_geom_info(
+        nside::Integer, stride::Integer, weight::AbstractArray{T}
+        ) where T <: Real
+
+Initialises a geometry structure corresponding to HEALPix.
+
+# Arguments
+- `nside::Integer`: HEALPix resolution parameter
+- `stride::Integer`: the stride between consecutive pixels in the ring
+- `weight::AbstractArray{T}`: the weight that must be multiplied to every pixel 
+    during a map analysis (typically the solid angle of a pixel in the ring)
+
+# Returns
+- `GeomInfo` object
+"""
 function make_weighted_healpix_geom_info(
         nside::Integer, stride::Integer, weight::AbstractArray{T}
-    ) where T
+    ) where T <: Real
 
     geom_info_ptr = Ref{Ptr{Cvoid}}()
 
@@ -121,7 +190,19 @@ function make_weighted_healpix_geom_info(
     GeomInfo(geom_info_ptr[])
 end
 
-function make_weighted_healpix_geom_info(nside::Integer, stride::Integer)
+"""
+    make_healpix_geom_info(nside::Integer, stride::Integer)
+
+Initialises a HEALPix geometry structure with equal pixel weights.
+
+# Arguments
+- `nside::Integer`: HEALPix resolution parameter
+- `stride::Integer`: the stride between consecutive pixels in the ring
+
+# Returns
+- `GeomInfo` object
+"""
+function make_healpix_geom_info(nside::Integer, stride::Integer)
     geom_info_ptr = Ref{Ptr{Cvoid}}()
     ccall(
         (:sharp_make_weighted_healpix_geom_info, libsharp2),
@@ -135,8 +216,13 @@ function make_weighted_healpix_geom_info(nside::Integer, stride::Integer)
 end
 
 """
+    map_size(geom_info::GeomInfo)
+
 Counts the number of grid points needed for (the local part of) a 
 map described by geometry info.
+
+# Returns
+- `Cint`
 """
 map_size(geom_info::GeomInfo) = ccall(
     (:sharp_map_size, libsharp2),
@@ -160,18 +246,33 @@ const SHARP_ALM2MAP_DERIV1 = Cint(4)    # synthesis of first derivatives
 """
 SHARP job flags.
 """
-# map and a_lm are in double precision
-const SHARP_DP = Cint(1<<4)     
-# results are added to the output arrays, instead of overwriting them
-const SHARP_ADD = Cint(1<<5)    
+const SHARP_DP = Cint(1<<4)   # map and a_lm are in double precision
+const SHARP_ADD = Cint(1<<5)  # results are added to the output 
+                              # arrays, instead of overwriting them 
 const SHARP_NO_FFT = Cint(1<<7)
 
 
-
 """
+    sharp_execute!(args...) where T <: AbstractFloat
+
 Performs a libsharp2 SHT job.
 
-This sets `double *time`, `unsigned long long *opcnt` to C_NULL.
+For a spin 0 field, maps[1] should be the array of containing the map elements.
+Similarly, for a spin 2 field, maps[1] and maps[2] contain the two spin-2 
+components. The alms are in a similar format, i.e. alms[1] and alms[2] are the 
+harmonics describing a spin-2 field.
+
+You should specify `flags=0` for single precision and `flags=SHARP_DP` for
+double precision.
+
+# Arguments
+- `jobtype::Integer`: libsharp job type
+- `spin::Integer`: spin of the field
+- `alms::Array{Array{Complex{T},1},1}`: alm arrays
+- `maps::Array{Array{T,1},1}`: map arrays
+- `geom_info::GeomInfo`: pixelisation info
+- `alm_info::AlmInfo`: spherical harmonic coefficients info
+- `flags::Integer`: additional flags
 """
 function sharp_execute!(jobtype::Integer, spin::Integer, 
                         alms::Array{Array{Complex{T},1},1}, 

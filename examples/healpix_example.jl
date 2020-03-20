@@ -1,11 +1,7 @@
-##
-using Libdl
-using libsharp2_jll
 using LibSharp
 using Healpix
 
-##
-
+## set up geometry and alms
 nside = 4
 lmax = 4
 geom_info = make_weighted_healpix_geom_info(
@@ -35,5 +31,5 @@ sharp_execute!(
     geom_info, alm_info, LibSharp.SHARP_DP
 )
 
-
+println(alms)
 
