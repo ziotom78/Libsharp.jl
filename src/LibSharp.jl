@@ -6,7 +6,8 @@ using libsharp2_jll
 export AlmInfo, make_alm_info, alm_index, alm_count
 export make_triangular_alm_info
 
-export GeomInfo, make_weighted_healpix_geom_info, map_size
+export GeomInfo, map_size
+export make_weighted_healpix_geom_info, make_healpix_geom_info
 export sharp_execute!
 
 export SHARP_YtW, SHARP_MAP2ALM, SHARP_Y, SHARP_ALM2MAP
@@ -34,7 +35,14 @@ end
         mstart::AbstractArray{T}) where T <: Integer
 
 Initialises a general a_lm data structure.
- 
+
+# Arguments
+- `lmax::Integer`: maximum spherical harmonic ℓ
+- `mmax::Integer`: maximum spherical harmonic m
+- `stride::Integer`: the stride between consecutive pixels in the ring
+- `mstart::AbstractArray{T}`: index of the coefficient with the quantum 
+    numbers 0, m. Must have mmax+1 entries.
+
 # Returns
 - AlmInfo object
 """
@@ -59,6 +67,11 @@ end
 Initialises an a_lm data structure according to the scheme 
 used by Healpix_cxx.
  
+# Arguments
+- `lmax::Integer`: maximum spherical harmonic ℓ
+- `mmax::Integer`: maximum spherical harmonic m
+- `stride::Integer`: the stride between consecutive pixels in the ring
+
 # Returns
 - `AlmInfo` object
 """
@@ -295,7 +308,5 @@ function sharp_execute!(jobtype::Integer, spin::Integer,
         Ptr{Cdouble}(C_NULL), Ptr{Culonglong}(C_NULL)
     )
 end
-
-
 
 end # module
