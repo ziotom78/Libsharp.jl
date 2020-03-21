@@ -1,6 +1,6 @@
 name = "LibSharp"
 uuid = "ac8d63fe-4615-43ae-9860-9cd4a3820532"
-authors = ["Maurizio Tomasi"]
+authors = ["Maurizio Tomasi", "Zack Li"]
 version = "0.1.0"
 
 [deps]
