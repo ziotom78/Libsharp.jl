@@ -9,14 +9,14 @@ alm_info = make_triangular_alm_info(lmax, mmax, 1)
 npix = map_size(geom_info)
 nalms = alm_count(alm_info)
 
-## spin 0 example
+## spin 0 example for map2alm. for alm2map, pass SHARP_ALM2MAP to sharp_execute!
 alms = [ones(ComplexF64, nalms)]
 maps = [2 .* ones(npix)]
 sharp_execute!(
     SHARP_MAP2ALM, 0, alms, maps,
     geom_info, alm_info, SHARP_DP
 )
-println("\nSpin 0 alms:\n", alms, "\n")
+println("\nmap with all pixels=2 map2alm spin 0 alms:\n", alms, "\n")
 
 ## spin 2 example
 alms = [ones(ComplexF64, (nalms)), ones(ComplexF64, (nalms))]
@@ -25,4 +25,4 @@ sharp_execute!(
     SHARP_MAP2ALM, 2, alms, maps,
     geom_info, alm_info, SHARP_DP
 )
-println("Spin 2 alms:\n", alms, "\n")
+println("\nmap with all pixels=2 map2alm spin 2 alms:\n", alms, "\n")
