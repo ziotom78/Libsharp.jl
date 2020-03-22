@@ -1,4 +1,4 @@
-using LibSharp
+using Libsharp
 using Test
 
 ## tests relating to the storage of a_lm coefficients
@@ -6,7 +6,7 @@ using Test
     # test the finalizer of the AlmInfo
     triangular_alm = make_triangular_alm_info(10, 10, 1)
     @test triangular_alm.ptr != C_NULL
-    LibSharp.destroy_alm_info(triangular_alm)
+    Libsharp.destroy_alm_info(triangular_alm)
     @test triangular_alm.ptr == C_NULL
 
     # test the 0-based alm index computation
@@ -25,7 +25,7 @@ end
     # test the finalizer of the AlmInfo
     geom_info = make_healpix_geom_info(16, 1)
     @test geom_info.ptr != C_NULL
-    LibSharp.destroy_geom_info(geom_info)
+    Libsharp.destroy_geom_info(geom_info)
     @test geom_info.ptr == C_NULL
 
     # test the total number of pixels

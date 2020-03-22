@@ -1,4 +1,4 @@
-using LibSharp
+using Libsharp
 using Healpix
 
 ## set up geometry and alms

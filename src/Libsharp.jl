@@ -1,4 +1,4 @@
-module LibSharp
+module Libsharp
 
 using Libdl
 using libsharp2_jll
