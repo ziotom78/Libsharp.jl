@@ -1,7 +1,7 @@
 name = "Libsharp"
 uuid = "ac8d63fe-4615-43ae-9860-9cd4a3820532"
 authors = ["Maurizio Tomasi", "Zack Li"]
-version = "0.1.0"
+version = "0.2.0"
 
 [deps]
 Libdl = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
