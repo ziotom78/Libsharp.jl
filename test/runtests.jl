@@ -147,3 +147,13 @@ end
          1.06275217, -1.9631492 ,  1.00333301]
     @test isapprox(maps[2] , test_map_spin2_B)
 end
+
+@testset "Other stuff" begin
+    arch = architecture()
+    @test typeof(arch) == String
+    @test arch != ""
+
+    vector_length = veclen()
+    @test typeof(vector_length) == Int
+    @test vector_length ≥ 1
+end
