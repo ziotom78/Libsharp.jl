@@ -14,6 +14,40 @@ export SHARP_YtW, SHARP_MAP2ALM, SHARP_Y, SHARP_ALM2MAP
 export SHARP_Yt, SHARP_WY, SHARP_ALM2MAP_DERIV1
 export SHARP_DP, SHARP_ADD, SHARP_NO_FFT
 
+export architecture, veclen
+
+"""
+    architecture()
+
+Returns a string describing the kind of architecture used when
+compiling the libsharp C library
+
+"""
+function architecture()
+    str_ptr = ccall(
+        (:sharp_architecture, libsharp2),
+        Ptr{UInt8},
+        (),
+    )
+
+    unsafe_string(str_ptr)
+end
+
+"""
+    veclen()
+
+Return the number of elements processed simultaneously by libsharp in
+one operation. This depends on the architecture (e.g., AVX, SSE2…)
+used to build the library.
+
+"""
+function veclen()
+    ccall(
+        (:sharp_veclen, libsharp2),
+        Int,
+        (),
+    )
+end
 
 """
     AlmInfo
