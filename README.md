@@ -3,7 +3,7 @@
 [![Build Status](https://github.com/ziotom78/Libsharp.jl/workflows/Tests/badge.svg)](https://github.com/ziotom78/Libsharp.jl/actions?query=workflow%3A%22Tests%22)
 [![Codecov](https://codecov.io/gh/ziotom78/Libsharp.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/ziotom78/Libsharp.jl)
 
-This Julia package provides bindings to the libsharp library.
+This Julia package provides bindings to the [libsharp2](https://gitlab.mpcdf.mpg.de/mtr/libsharp) library, written by Martin Reinecke.
 
 We export the following job types for `sharp_execute!`.
 ```
