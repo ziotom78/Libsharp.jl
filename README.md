@@ -1,7 +1,6 @@
 # Libsharp
 
-[![Build Status](https://travis-ci.com/ziotom78/Libsharp.jl.svg?branch=master)](https://travis-ci.com/ziotom78/Libsharp.jl)
-[![Build Status](https://ci.appveyor.com/api/projects/status/github/ziotom78/Libsharp.jl?svg=true)](https://ci.appveyor.com/project/ziotom78/Libsharp-jl)
+[![Build Status](https://github.com/ziotom78/Libsharp.jl/workflows/Tests/badge.svg)](https://github.com/ziotom78/Libsharp.jl/actions?query=workflow%3A%22Tests%22)
 [![Codecov](https://codecov.io/gh/ziotom78/Libsharp.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/ziotom78/Libsharp.jl)
 
 This Julia package provides bindings to the libsharp library.
