@@ -65,7 +65,7 @@ end
 
 
 """
-    make_alm_info(lmax::Integer, mmax::Integer, stride::Integer, 
+    make_alm_info(lmax::Integer, mmax::Integer, stride::Integer,
         mstart::AbstractArray{T}) where T <: Integer
 
 Initialises a general a_lm data structure.
@@ -74,20 +74,20 @@ Initialises a general a_lm data structure.
 - `lmax::Integer`: maximum spherical harmonic ℓ
 - `mmax::Integer`: maximum spherical harmonic m
 - `stride::Integer`: the stride between consecutive pixels in the ring
-- `mstart::AbstractArray{T}`: index of the coefficient with the quantum 
+- `mstart::AbstractArray{T}`: index of the coefficient with the quantum
     numbers 0, m. Must have mmax+1 entries.
 
 # Returns
 - AlmInfo object
 """
-function make_alm_info(lmax::Integer, mmax::Integer, stride::Integer, 
+function make_alm_info(lmax::Integer, mmax::Integer, stride::Integer,
                        mstart::AbstractArray{T}) where T <: Integer
     alm_info_ptr = Ref{Ptr{Cvoid}}()
-    mstart_cint = [Cint(x) for x in mstart]
+    mstart_cint = [Cptrdiff_t(x) for x in mstart]
     ccall(
         (:sharp_make_alm_info, libsharp2),
         Cvoid,
-        (Cint, Cint, Cint, Ref{Cint}, Ref{Ptr{Cvoid}}),
+        (Cint, Cint, Cint, Ref{Cptrdiff_t}, Ref{Ptr{Cvoid}}),
         lmax, mmax, stride, mstart_cint, alm_info_ptr,
     )
 
@@ -96,20 +96,61 @@ end
 
 
 """
-    make_triangular_alm_info(lmax::Integer, mmax::Integer, stride::Integer)
+    make_genral_alm_info(
+        lmax::Integer, mmax::Integer, stride::Integer, mval::AbstractArray{T}, mstart::AbstractArray{T}
+        ) where T <: Integer
 
-Initialises an a_lm data structure according to the scheme 
-used by Healpix_cxx.
- 
+Initialises a general a_lm data structure according to the following parameter.
+It can be used to construct an `AlmInfo` object for a subset of an `Alm` set.
+
 # Arguments
 - `lmax::Integer`: maximum spherical harmonic ℓ
-- `mmax::Integer`: maximum spherical harmonic m
-- `stride::Integer`: the stride between consecutive pixels in the ring
+- `nm::Integer`: number of different m values
+- `stride::Integer`: the stride between consecutive ℓ's
+- `mval::AbstractArray{T}`: array with `nm` entries containing the individual m values
+- `mstart::AbstractArray{T}`: array with `nm` entries containing the (hypothetical)
+    indices {i} of the coefficients with the quantum numbers ℓ=0, m=mval[i]
 
 # Returns
 - `AlmInfo` object
 """
-function make_triangular_alm_info(lmax::Integer, mmax::Integer, 
+function make_general_alm_info(
+    lmax::Integer,
+    nm::Integer,
+    stride::Integer, #generally = 1
+    mval::AbstractArray{T},
+    mstart::AbstractArray{T}
+    ) where T <: Integer
+
+    alm_info_ptr = Ref{Ptr{Cvoid}}()
+    mval_cint = [Cint(x) for x in mval]
+    mstart_cptrdiff = [Cptrdiff_t(x) for x in mstart]
+
+    ccall(
+        (:sharp_make_general_alm_info, libsharp2),
+        Cvoid,
+        (Cint, Cint, Cint, Ref{Cint}, Ref{Cptrdiff_t}, Cint, Ref{Ptr{Cvoid}}),
+        lmax, nm, stride, mval_cint, mstart_cptrdiff, 0, alm_info_ptr,
+    )
+
+    AlmInfo(alm_info_ptr[])
+end
+
+"""
+    make_triangular_alm_info(lmax::Integer, mmax::Integer, stride::Integer)
+
+Initialises an a_lm data structure according to the scheme
+used by Healpix_cxx.
+
+# Arguments
+- `lmax::Integer`: maximum spherical harmonic ℓ
+- `mmax::Integer`: maximum spherical harmonic m
+- `stride::Integer`: the stride between consecutive ℓ's
+
+# Returns
+- `AlmInfo` object
+"""
+function make_triangular_alm_info(lmax::Integer, mmax::Integer,
                                   stride::Integer)
 
     alm_info_ptr = Ref{Ptr{Cvoid}}()
@@ -211,7 +252,7 @@ Initialises a geometry structure corresponding to HEALPix.
 # Arguments
 - `nside::Integer`: HEALPix resolution parameter
 - `stride::Integer`: the stride between consecutive pixels in the ring
-- `weight::AbstractArray{T}`: the weight that must be multiplied to every pixel 
+- `weight::AbstractArray{T}`: the weight that must be multiplied to every pixel
     during a map analysis (typically the solid angle of a pixel in the ring)
 
 # Returns
@@ -227,7 +268,7 @@ function make_weighted_healpix_geom_info(
     nrings = 4 * nside - 1
     @assert length(weight) == nrings
 
-    weight_cdouble = [Cdouble(x) for x in weight]  
+    weight_cdouble = [Cdouble(x) for x in weight]
     ccall(
         (:sharp_make_weighted_healpix_geom_info, libsharp2),
         Cvoid,
@@ -265,7 +306,7 @@ end
 """
     map_size(geom_info::GeomInfo)
 
-Counts the number of grid points needed for (the local part of) a 
+Counts the number of grid points needed for (the local part of) a
 map described by geometry info.
 
 # Returns
@@ -294,8 +335,8 @@ const SHARP_ALM2MAP_DERIV1 = Cint(4)    # synthesis of first derivatives
 SHARP job flags.
 """
 const SHARP_DP = Cint(1<<4)   # map and a_lm are in double precision
-const SHARP_ADD = Cint(1<<5)  # results are added to the output 
-                              # arrays, instead of overwriting them 
+const SHARP_ADD = Cint(1<<5)  # results are added to the output
+                              # arrays, instead of overwriting them
 const SHARP_NO_FFT = Cint(1<<7)
 
 
@@ -305,8 +346,8 @@ const SHARP_NO_FFT = Cint(1<<7)
 Performs a libsharp2 SHT job.
 
 For a spin 0 field, maps[1] should be the array of containing the map elements.
-Similarly, for a spin 2 field, maps[1] and maps[2] contain the two spin-2 
-components. The alms are in a similar format, i.e. alms[1] and alms[2] are the 
+Similarly, for a spin 2 field, maps[1] and maps[2] contain the two spin-2
+components. The alms are in a similar format, i.e. alms[1] and alms[2] are the
 harmonics describing a spin-2 field.
 
 You should specify `flags=0` for single precision and `flags=SHARP_DP` for
@@ -321,22 +362,22 @@ double precision.
 - `alm_info::AlmInfo`: spherical harmonic coefficients info
 - `flags::Integer`: additional flags
 """
-function sharp_execute!(jobtype::Integer, spin::Integer, 
-                        alms::Array{Array{Complex{T},1},1}, 
-                        maps::Array{Array{T,1},1}, 
-                        geom_info::GeomInfo, alm_info::AlmInfo, 
+function sharp_execute!(jobtype::Integer, spin::Integer,
+                        alms::Array{Array{Complex{T},1},1},
+                        maps::Array{Array{T,1},1},
+                        geom_info::GeomInfo, alm_info::AlmInfo,
                         flags::Integer) where T <: AbstractFloat
 
     GC.@preserve alms maps ccall(
         (:sharp_execute, libsharp2),
         Cvoid,
         (
-            Cint, Cint, Ptr{Cvoid}, Ptr{Cvoid}, 
+            Cint, Cint, Ptr{Cvoid}, Ptr{Cvoid},
             Ptr{Cvoid}, Ptr{Cvoid}, Cint,
             Ref{Cdouble}, Ref{Culonglong}
         ),
-        jobtype, spin, 
-        [pointer(alm) for alm in alms], 
+        jobtype, spin,
+        [pointer(alm) for alm in alms],
         [pointer(map) for map in maps],
         geom_info.ptr, alm_info.ptr, flags,
         Ptr{Cdouble}(C_NULL), Ptr{Culonglong}(C_NULL)
