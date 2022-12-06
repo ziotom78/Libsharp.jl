@@ -7,7 +7,7 @@ export AlmInfo, make_alm_info, alm_index, alm_count
 export make_triangular_alm_info, make_general_alm_info
 
 export GeomInfo, map_size
-export make_weighted_healpix_geom_info, make_healpix_geom_info
+export make_weighted_healpix_geom_info, make_healpix_geom_info, make_subset_healpix_geom_info
 export sharp_execute!
 
 export SHARP_YtW, SHARP_MAP2ALM, SHARP_Y, SHARP_ALM2MAP
@@ -300,6 +300,45 @@ function make_healpix_geom_info(nside::Integer, stride::Integer)
     )
     # passes NULL for ring weights
 
+    GeomInfo(geom_info_ptr[])
+end
+
+"""
+    make_subset_healpix_geom_info(
+        nside::Integer, stride::Integer, nrings::Integer, rings::AbstractArray{T}
+        ) where T <: Integer
+
+Initialises a geometry structure corresponding to a `nrings`-subset of a HealpixMap.
+No weights are passed: they are assumed to be 1 for every ring.
+In this case `map_size` case will return the number of pixel contained in the subset.
+
+# Arguments
+- `nside::Integer`: HEALPix resolution parameter
+- `stride::Integer`: the stride between consecutive pixels in the ring
+- `nrings::Integer`: number of rings included in the subset,
+    must be 0 ≤ `nrings` ≤ 4 `nside` - 1
+- `rings::AbstractArray{Integer}`: array containing the indices of the rings,
+    with 1 being the first ring at the north pole.
+# Returns
+- `GeomInfo` object
+
+"""
+function make_subset_healpix_geom_info(
+    nside::Integer,
+    stride::Integer,
+    nrings::Integer,
+    rings::AbstractArray{T}
+    ) where T <: Integer
+
+    geom_info_ptr = Ref{Ptr{Cvoid}}()
+
+    rings_cint = [Cint(x) for x in rings]
+    ccall(
+        (:sharp_make_subset_healpix_geom_info, libsharp2),
+        Cvoid,
+        (Cint, Cint, Cint, Ref{Cint}, Ref{Cdouble}, Ref{Ptr{Cvoid}}),
+        nside, stride, nrings, rings_cint, Ptr{Cdouble}(C_NULL), geom_info_ptr,
+    )
     GeomInfo(geom_info_ptr[])
 end
 

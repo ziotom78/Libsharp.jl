@@ -41,6 +41,15 @@ end
     geom_info = make_weighted_healpix_geom_info(
         16, 1, ones(16 * 4 - 1))
     @test map_size(geom_info) == 3072
+
+    #test the number of pixels in a subset
+    geom_info = make_subset_healpix_geom_info(8, 1, 6, [14, 18, 9, 23, 4, 28])
+    @test map_size(geom) == 160
+
+    #and finalizer
+    @test geom_info.ptr != C_NULL
+    Libsharp.destroy_geom_info(geom_info)
+    @test geom_info.ptr == C_NULL
 end
 
 ## tests relating to spherical harmonic transform map2alm
