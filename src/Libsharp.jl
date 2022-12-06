@@ -4,7 +4,7 @@ using Libdl
 using libsharp2_jll
 
 export AlmInfo, make_alm_info, alm_index, alm_count
-export make_triangular_alm_info
+export make_triangular_alm_info, make_general_alm_info
 
 export GeomInfo, map_size
 export make_weighted_healpix_geom_info, make_healpix_geom_info
@@ -83,12 +83,12 @@ Initialises a general a_lm data structure.
 function make_alm_info(lmax::Integer, mmax::Integer, stride::Integer,
                        mstart::AbstractArray{T}) where T <: Integer
     alm_info_ptr = Ref{Ptr{Cvoid}}()
-    mstart_cint = [Cptrdiff_t(x) for x in mstart]
+    mstart_cptrdiff = [Cptrdiff_t(x) for x in mstart]
     ccall(
         (:sharp_make_alm_info, libsharp2),
         Cvoid,
         (Cint, Cint, Cint, Ref{Cptrdiff_t}, Ref{Ptr{Cvoid}}),
-        lmax, mmax, stride, mstart_cint, alm_info_ptr,
+        lmax, mmax, stride, mstart_cptrdiff, alm_info_ptr,
     )
 
     AlmInfo(alm_info_ptr[])
