@@ -4,7 +4,7 @@ using Libdl
 using libsharp2_jll
 
 export AlmInfo, make_alm_info, alm_index, alm_count
-export make_triangular_alm_info, make_general_alm_info
+export make_triangular_alm_info, make_general_alm_info, make_mmajor_complex_alm_info
 
 export GeomInfo, map_size
 export make_weighted_healpix_geom_info, make_healpix_geom_info, make_subset_healpix_geom_info
@@ -163,6 +163,51 @@ function make_triangular_alm_info(lmax::Integer, mmax::Integer,
 
     AlmInfo(alm_info_ptr[])
 end
+
+""" make_mvstart_complex(lmax::Integer, stride::Integer, mval::AbstractArray{T}) where T <: Integer
+
+    Computes the `mstart` array given any `mval` and `lmax` for `Alm` in complex
+    representation.
+"""
+function make_mvstart_complex(lmax::Integer, stride::Integer, mval::AbstractArray{T}) where T <: Integer
+    idx = 0 #tracks the number of 'consumed' elements so far; need to correct by m
+    mi = 1 #index of mstart array
+    mstart = Vector{Int}(undef, length(mval))
+    for m in mval
+        mstart[mi] = stride * (idx - m) #fill mstart
+        idx += lmax + 1 - m
+        mi += 1
+    end
+    mstart
+end
+
+""" make_mmajor_complex_alm_info(lmax::Integer, stride::Integer, mval::AbstractArray{T}) where T <: Integer
+
+    Creates an `AlmInfo` object for a (sub)set of a_ℓm stored as complex numbers
+    by m-major (as in Healpix.jl), for any given array of m values.
+
+    # Arguments
+    - `lmax::Integer`: maximum spherical harmonic ℓ
+    - `stride::Integer`: the stride between consecutive ℓ's
+    - `mval::AbstractArray{T}`: array containing the values of m included in the (sub)set
+        pass `nothing` to use all the m's from 0 to lmax.
+
+    # Returns
+    - `AlmInfo` object
+"""
+function make_mmajor_complex_alm_info(
+    lmax::Integer,
+    stride::Integer,
+    mval::AbstractArray{T}
+    ) where T <: Integer
+
+    nm = length(mval)
+    mstart = make_mvstart_complex(lmax, stride, mval)
+    make_general_alm_info(lmax, nm, stride, mval, mstart) #construct AlmInfo
+end
+
+make_mmajor_complex_alm_info(lmax::Integer, stride::Integer, nothing) =
+    make_mmajor_complex_alm_info(lmax, stride, 0:lmax)
 
 """
     destroy_alm_info(info::AlmInfo)

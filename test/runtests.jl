@@ -16,6 +16,8 @@ using Test
     @test alm_index(alm, 5, 4) == 9
     general_alm = make_general_alm_info(3, 4, 1, 0:3, [0, 3, 5, 6])
     @test alm_index(general_alm, 3, 2) == 8
+    alm = make_mmajor_complex_alm_info(6, 1, nothing)
+    @test alm_index(alm, 5, 4) == 23
 
     # test total counts
     alm = make_alm_info(10, 10, 1, 0:10)
@@ -24,7 +26,8 @@ using Test
     @test alm_count(triangular_alm) == 66
     general_alm = make_general_alm_info(3, 4, 1, 0:3, [0, 3, 5, 6])
     @test alm_count(general_alm) == 10
-
+    alm = make_mmajor_complex_alm_info(6, 1, nothing)
+    @test alm_count(alm) == 28
 end
 
 ## tests relating to pixelization properties
