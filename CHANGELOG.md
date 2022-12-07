@@ -1,5 +1,7 @@
 # HEAD
 
+-   Fix type conversion bug in `make_alm_info()` [#9](https://github.com/ziotom78/Libsharp.jl/pull/9)
+
 # Version 0.2.0
 
 -   Switch from Travis/Appveyor to GitHub actions [#5](https://github.com/ziotom78/Libsharp.jl/pull/5)

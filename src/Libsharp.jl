@@ -348,6 +348,7 @@ function make_healpix_geom_info(nside::Integer, stride::Integer)
     GeomInfo(geom_info_ptr[])
 end
 
+
 """
     make_subset_healpix_geom_info(
         nside::Integer, stride::Integer, nrings::Integer, rings::AbstractArray{T}
