@@ -1,5 +1,7 @@
 # HEAD
 
+-   New functions `make_general_alm_info`, `make_mmajor_complex_alm_info`, and `make_subset_healpix_geom_info` [#10](https://github.com/ziotom78/Libsharp.jl/pull/10)
+
 -   Fix type conversion bug in `make_alm_info()` [#9](https://github.com/ziotom78/Libsharp.jl/pull/9)
 
 # Version 0.2.0

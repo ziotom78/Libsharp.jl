@@ -4,10 +4,10 @@ using Libdl
 using libsharp2_jll
 
 export AlmInfo, make_alm_info, alm_index, alm_count
-export make_triangular_alm_info
+export make_triangular_alm_info, make_general_alm_info, make_mmajor_complex_alm_info
 
 export GeomInfo, map_size
-export make_weighted_healpix_geom_info, make_healpix_geom_info
+export make_weighted_healpix_geom_info, make_healpix_geom_info, make_subset_healpix_geom_info
 export sharp_execute!
 
 export SHARP_YtW, SHARP_MAP2ALM, SHARP_Y, SHARP_ALM2MAP
@@ -96,6 +96,47 @@ end
 
 
 """
+    make_general_alm_info(
+        lmax::Integer, mmax::Integer, stride::Integer, mval::AbstractArray{T}, mstart::AbstractArray{T}
+        ) where T <: Integer
+
+Initialises a general a_lm data structure according to the following parameter.
+It can be used to construct an `AlmInfo` object for a subset of an `Alm` set.
+
+# Arguments
+- `lmax::Integer`: maximum spherical harmonic ℓ
+- `nm::Integer`: number of different m values
+- `stride::Integer`: the stride between consecutive ℓ's
+- `mval::AbstractArray{T}`: array with `nm` entries containing the individual m values
+- `mstart::AbstractArray{T}`: array with `nm` entries containing the (hypothetical)
+    indices {i} of the coefficients with the quantum numbers ℓ=0, m=mval[i]
+
+# Returns
+- `AlmInfo` object
+"""
+function make_general_alm_info(
+    lmax::Integer,
+    nm::Integer,
+    stride::Integer, #generally = 1
+    mval::AbstractArray{T},
+    mstart::AbstractArray{T}
+    ) where T <: Integer
+
+    alm_info_ptr = Ref{Ptr{Cvoid}}()
+    mval_cint = [Cint(x) for x in mval]
+    mstart_cptrdiff = [Cptrdiff_t(x) for x in mstart]
+
+    ccall(
+        (:sharp_make_general_alm_info, libsharp2),
+        Cvoid,
+        (Cint, Cint, Cint, Ref{Cint}, Ref{Cptrdiff_t}, Cint, Ref{Ptr{Cvoid}}),
+        lmax, nm, stride, mval_cint, mstart_cptrdiff, 0, alm_info_ptr,
+    )
+
+    AlmInfo(alm_info_ptr[])
+end
+
+"""
     make_triangular_alm_info(lmax::Integer, mmax::Integer, stride::Integer)
 
 Initialises an a_lm data structure according to the scheme
@@ -122,6 +163,51 @@ function make_triangular_alm_info(lmax::Integer, mmax::Integer,
 
     AlmInfo(alm_info_ptr[])
 end
+
+""" make_mvstart_complex(lmax::Integer, stride::Integer, mval::AbstractArray{T}) where T <: Integer
+
+    Computes the `mstart` array given any `mval` and `lmax` for `Alm` in complex
+    representation.
+"""
+function make_mvstart_complex(lmax::Integer, stride::Integer, mval::AbstractArray{T}) where T <: Integer
+    idx = 0 #tracks the number of 'consumed' elements so far; need to correct by m
+    mi = 1 #index of mstart array
+    mstart = Vector{Int}(undef, length(mval))
+    for m in mval
+        mstart[mi] = stride * (idx - m) #fill mstart
+        idx += lmax + 1 - m
+        mi += 1
+    end
+    mstart
+end
+
+""" make_mmajor_complex_alm_info(lmax::Integer, stride::Integer, mval::AbstractArray{T}) where T <: Integer
+
+    Creates an `AlmInfo` object for a (sub)set of a_ℓm stored as complex numbers
+    by m-major (as in Healpix.jl), for any given array of m values.
+
+    # Arguments
+    - `lmax::Integer`: maximum spherical harmonic ℓ
+    - `stride::Integer`: the stride between consecutive ℓ's
+    - `mval::AbstractArray{T}`: array containing the values of m included in the (sub)set
+        pass `nothing` to use all the m's from 0 to lmax.
+
+    # Returns
+    - `AlmInfo` object
+"""
+function make_mmajor_complex_alm_info(
+    lmax::Integer,
+    stride::Integer,
+    mval::AbstractArray{T}
+    ) where T <: Integer
+
+    nm = length(mval)
+    mstart = make_mvstart_complex(lmax, stride, mval)
+    make_general_alm_info(lmax, nm, stride, mval, mstart) #construct AlmInfo
+end
+
+make_mmajor_complex_alm_info(lmax::Integer, stride::Integer, nothing) =
+    make_mmajor_complex_alm_info(lmax, stride, 0:lmax)
 
 """
     destroy_alm_info(info::AlmInfo)
@@ -262,6 +348,44 @@ function make_healpix_geom_info(nside::Integer, stride::Integer)
     GeomInfo(geom_info_ptr[])
 end
 
+"""
+    make_subset_healpix_geom_info(
+        nside::Integer, stride::Integer, nrings::Integer, rings::AbstractArray{T}
+        ) where T <: Integer
+
+Initialises a geometry structure corresponding to a `nrings`-subset of a HealpixMap.
+No weights are passed: they are assumed to be 1 for every ring.
+In this case `map_size` case will return the number of pixel contained in the subset.
+
+# Arguments
+- `nside::Integer`: HEALPix resolution parameter
+- `stride::Integer`: the stride between consecutive pixels in the ring
+- `nrings::Integer`: number of rings included in the subset,
+    must be 0 ≤ `nrings` ≤ 4 `nside` - 1
+- `rings::AbstractArray{Integer}`: array containing the indices of the rings,
+    with 1 being the first ring at the north pole.
+# Returns
+- `GeomInfo` object
+
+"""
+function make_subset_healpix_geom_info(
+    nside::Integer,
+    stride::Integer,
+    nrings::Integer,
+    rings::AbstractArray{T}
+    ) where T <: Integer
+
+    geom_info_ptr = Ref{Ptr{Cvoid}}()
+
+    rings_cint = [Cint(x) for x in rings]
+    ccall(
+        (:sharp_make_subset_healpix_geom_info, libsharp2),
+        Cvoid,
+        (Cint, Cint, Cint, Ref{Cint}, Ref{Cdouble}, Ref{Ptr{Cvoid}}),
+        nside, stride, nrings, rings_cint, Ptr{Cdouble}(C_NULL), geom_info_ptr,
+    )
+    GeomInfo(geom_info_ptr[])
+end
 
 """
     map_size(geom_info::GeomInfo)
