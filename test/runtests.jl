@@ -24,12 +24,10 @@ using Test
     @test alm_count(alm) == 66
     triangular_alm = make_triangular_alm_info(10, 10, 1)
     @test alm_count(triangular_alm) == 66
-
     general_alm = make_general_alm_info(3, 4, 1, 0:3, [0, 3, 5, 6])
     @test alm_count(general_alm) == 10
     alm = make_mmajor_complex_alm_info(6, 1, nothing)
     @test alm_count(alm) == 28
-
 end
 
 ## tests relating to pixelization properties
