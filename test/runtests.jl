@@ -12,12 +12,15 @@ using Test
     # test the 0-based alm index computation
     triangular_alm = make_triangular_alm_info(10, 10, 1)
     @test alm_index(triangular_alm, 5, 4) == 39
+    alm = make_alm_info(10, 10, 1, 0:10)
+    @test alm_index(alm, 5, 4) == 9
 
     # test total counts
     alm = make_alm_info(10, 10, 1, 0:10)
     @test alm_count(alm) == 66
     triangular_alm = make_triangular_alm_info(10, 10, 1)
     @test alm_count(triangular_alm) == 66
+
 end
 
 ## tests relating to pixelization properties
@@ -63,7 +66,7 @@ end
         0.00000000e+00+0.00000000e+00im,  0.00000000e+00+0.00000000e+00im,
         -7.87873039e-04-9.64866195e-20im]
     @test isapprox(alms[1] , test_alm_spin0)
-    
+
     # spin 2 test
     alms = [zeros(ComplexF64, nalms), zeros(ComplexF64, nalms)]
     maps = [2.0 .* ones(npix), 2.0 .* ones(npix)]
@@ -71,7 +74,7 @@ end
         SHARP_MAP2ALM, 2, alms, maps,
         geom_info, alm_info, SHARP_DP
     )
-    test_alm_spin2 = [ 
+    test_alm_spin2 = [
         0.00000000e+00+0.00000000e+00im,  0.00000000e+00+0.00000000e+00im,
         -6.49104757e+00+0.00000000e+00im, -1.31064234e-16+0.00000000e+00im,
         -2.27889895e+00+0.00000000e+00im,  0.00000000e+00+0.00000000e+00im,
@@ -86,7 +89,7 @@ end
 end
 
 ## tests relating to spherical harmonic transform alm2map
-@testset "alm2map" begin 
+@testset "alm2map" begin
     nside = 2
     lmax = 2
     geom_info = make_healpix_geom_info(nside, 1)
@@ -134,7 +137,7 @@ end
         -1.9631492 ,  1.06275217, -0.59650858]
     @test isapprox(maps[1] , test_map_spin2_E)
 
-    test_map_spin2_B = [ 
+    test_map_spin2_B = [
         1.06275217, -0.59650858,  1.00333301, -1.9631492 , -0.69806834,
          1.43862464,  0.72899969, -0.72916617, -0.25943678,  0.1809384 ,
         -1.4882688 , -2.6071711 , -1.78405186,  0.29450851,  1.20357653,
