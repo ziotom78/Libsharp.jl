@@ -96,7 +96,7 @@ end
 
 
 """
-    make_genral_alm_info(
+    make_general_alm_info(
         lmax::Integer, mmax::Integer, stride::Integer, mval::AbstractArray{T}, mstart::AbstractArray{T}
         ) where T <: Integer
 
