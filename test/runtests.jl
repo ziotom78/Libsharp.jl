@@ -46,11 +46,9 @@ end
 
     #test the number of pixels in a subset
     geom_info = make_subset_healpix_geom_info(8, 1, 6, [14, 18, 9, 23, 4, 28])
-<<<<<<< HEAD
     @test map_size(geom_info) == 160
-=======
-    @test map_size(geom) == 160
->>>>>>> b21dce1 ( add make_subset_healpix_geom_info + tests)
+    geom_info = make_subset_healpix_geom_info(8, 1, 6, [14, 18, 9, 23, 4, 28], ones(6))
+    @test map_size(geom_info) == 160
 
     #and finalizer
     @test geom_info.ptr != C_NULL
