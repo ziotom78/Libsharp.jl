@@ -97,7 +97,7 @@ end
 
 """
     make_general_alm_info(
-        lmax::Integer, mmax::Integer, stride::Integer, mval::AbstractArray{T}, mstart::AbstractArray{T}
+        lmax::Integer, nm::Integer, stride::Integer, mval::AbstractArray{T}, mstart::AbstractArray{T}
         ) where T <: Integer
 
 Initialises a general a_lm data structure according to the following parameter.
