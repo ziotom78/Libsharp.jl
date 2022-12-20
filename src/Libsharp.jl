@@ -184,7 +184,8 @@ end
 """ make_mmajor_complex_alm_info(lmax::Integer, stride::Integer, mval::AbstractArray{T}) where T <: Integer
 
     Creates an `AlmInfo` object for a (sub)set of a_ℓm stored as complex numbers
-    by m-major (as in Healpix.jl), for any given array of m values.
+    ordered by m-major (as in Healpix.jl), for any given array of m values.
+    If mval is not passed it will be defaulted to the full range [0:lmax]
 
     # Arguments
     - `lmax::Integer`: maximum spherical harmonic ℓ
@@ -206,7 +207,7 @@ function make_mmajor_complex_alm_info(
     make_general_alm_info(lmax, nm, stride, mval, mstart) #construct AlmInfo
 end
 
-make_mmajor_complex_alm_info(lmax::Integer, stride::Integer, nothing) =
+make_mmajor_complex_alm_info(lmax::Integer, stride::Integer) =
     make_mmajor_complex_alm_info(lmax, stride, 0:lmax)
 
 """

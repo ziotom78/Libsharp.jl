@@ -16,7 +16,7 @@ using Test
     @test alm_index(alm, 5, 4) == 9
     general_alm = make_general_alm_info(3, 4, 1, 0:3, [0, 3, 5, 6])
     @test alm_index(general_alm, 3, 2) == 8
-    alm = make_mmajor_complex_alm_info(6, 1, nothing)
+    alm = make_mmajor_complex_alm_info(6, 1)
     @test alm_index(alm, 5, 4) == 23
 
     # test total counts
@@ -26,7 +26,7 @@ using Test
     @test alm_count(triangular_alm) == 66
     general_alm = make_general_alm_info(3, 4, 1, 0:3, [0, 3, 5, 6])
     @test alm_count(general_alm) == 10
-    alm = make_mmajor_complex_alm_info(6, 1, nothing)
+    alm = make_mmajor_complex_alm_info(6, 1)
     @test alm_count(alm) == 28
 end
 
@@ -46,7 +46,11 @@ end
 
     #test the number of pixels in a subset
     geom_info = make_subset_healpix_geom_info(8, 1, 6, [14, 18, 9, 23, 4, 28])
+<<<<<<< HEAD
     @test map_size(geom_info) == 160
+=======
+    @test map_size(geom) == 160
+>>>>>>> b21dce1 ( add make_subset_healpix_geom_info + tests)
 
     #and finalizer
     @test geom_info.ptr != C_NULL
